@@ -1,4 +1,4 @@
-"""week1 URL Configuration
+"""week2 URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.1/topics/http/urls/
@@ -18,5 +18,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('blog.urls'))
+    path('auth/', include('users.urls')),
+    path('', include('main.urls'))
 ]
