@@ -1,6 +1,9 @@
 from django.db import models
 from users.models import MainUser
 from main.constants import PROJECT_STATUSES, PROJECT_IN_PROCESS, PROJECT_FROZEN, PROJECT_DONE, BLOCK_STATUSES, TASKS_DONE, TASKS_FROZEN, TASKS_IN_PROCESS
+from utils.upload import task_document_path
+from utils.validators import task_document_size, task_document_extension
+
 import datetime
 
 # Create your models here.
@@ -15,6 +18,7 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+    
 
 class Block(models.Model):
     name = models.CharField(max_length=255)
@@ -40,7 +44,8 @@ class Task(models.Model):
         return self.name
 
 class TaskDocument(models.Model):
-    document = models.FileField()
+    document = models.FileField(upload_to=task_document_path, validators=[task_document_size, task_document_extension],
+                                null=True, blank=True)
     creator = models.ForeignKey(MainUser, on_delete=models.CASCADE, related_name='docs')
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='docs')
 

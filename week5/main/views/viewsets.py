@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets
 from rest_framework import mixins
 from rest_framework.decorators import action
@@ -10,6 +12,8 @@ from django.shortcuts import get_object_or_404
 from main import models, serializers
 from main.permissions import IsOwner, ProjectPermission, BlockPermission, TaskPermission, TaskInsidePermission
 
+logger = logging.getLogger(__name__)
+
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = models.Project.objects.all()
     serializer_class = serializers.ProjectSerializer
@@ -21,7 +25,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return serializers.ProjectSerializer
 
     def perform_create(self, serializer):
-        return serializer.save(creator=self.request.user)
+        serializer.save(creator=self.request.user)
+        logger.info(f"{self.request.user} created project: {serializer.data.get('name')}")
+        return serializer.data
 
     @action(methods=['GET'], detail=False)
     def my(self, request):
@@ -44,8 +50,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            logger.info(f"{self.request.user} created block: {serializer.data.get('name')}")
             return Response(serializer.errors)
-
+            
 class BlockDetailViewSet(mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
                            mixins.DestroyModelMixin,
@@ -69,6 +76,7 @@ class BlockDetailViewSet(mixins.RetrieveModelMixin,
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            logger.info(f"{self.request.user} created task: {serializer.data.get('name')}")
             return Response(serializer.errors)
 
 class TaskDetailViewSet(mixins.RetrieveModelMixin,
@@ -79,7 +87,7 @@ class TaskDetailViewSet(mixins.RetrieveModelMixin,
     serializer_class = serializers.TaskSerializer
     permission_classes = (TaskPermission,)
 
-    @action(methods=['GET', 'POST'], detail=True, permission_classes=(TaskInsidePermission))
+    @action(methods=['GET', 'POST'], detail=True, permission_classes=(TaskInsidePermission,))
     def comments(self, request, pk):
         if request.method == 'GET':
             task = get_object_or_404(models.Task, id=pk)
@@ -94,9 +102,10 @@ class TaskDetailViewSet(mixins.RetrieveModelMixin,
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            logger.info(f"{self.request.user} created task's comment: {serializer.data.get('name')}")
             return Response(serializer.errors)
 
-    @action(methods=['GET', 'POST'], detail=True, permission_classes=(TaskInsidePermission))
+    @action(methods=['GET', 'POST'], detail=True, permission_classes=(TaskInsidePermission,))
     def docs(self, request, pk):
         if request.method == 'GET':
             task = get_object_or_404(models.Task, id=pk)
@@ -111,6 +120,7 @@ class TaskDetailViewSet(mixins.RetrieveModelMixin,
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
+            logger.info(f"{self.request.user} created task's doc: {serializer.data.get('name')}")
             return Response(serializer.errors)
 
 class TaskCommentViewSet(mixins.RetrieveModelMixin,

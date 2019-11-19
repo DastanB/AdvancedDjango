@@ -21,7 +21,7 @@ class ProjectPermission(BasePermission):
         if not request.user.is_authenticated:
             return False
         if view.action is not 'list':
-            return request.user == obj.project.creator
+            return request.user == obj.creator
 
 class BlockPermission(BasePermission):
     message = 'You must be the owner of the project.'
@@ -52,7 +52,7 @@ class TaskPermission(BasePermission):
 
 
 class TaskInsidePermission(BasePermission):
-    message = 'You must be the owner of the project or task.'
+    message = 'You must be the owner of     the project or task.'
 
     def has_permission(self, request, view):
         return request.user.is_authenticated
