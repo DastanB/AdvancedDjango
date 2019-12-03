@@ -31,7 +31,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(methods=['GET'], detail=False)
     def my(self, request):
-        projects = models.Project.objects.filter(creator=self.request.user)
+        projects = models.Project.objects.filter(creator_id=self.request.user.id)
         serializer = self.get_serializer(projects, many=True)
         return Response(serializer.data)
 
@@ -78,6 +78,13 @@ class BlockDetailViewSet(mixins.RetrieveModelMixin,
                 return Response(serializer.data)
             logger.info(f"{self.request.user} created task: {serializer.data.get('name')}")
             return Response(serializer.errors)
+    
+    @action(methods=['GET'], detail=False)
+    def mytasks(self, request, pk):
+        block = get_object_or_404(models.Block, id=pk)
+        result = serializers.TaskShortSerializer(models.Task.objects.filter(block_id=block.id, executor_id=self.request.user.id), many=True)
+        return Response(result.data)
+
 
 class TaskDetailViewSet(mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
@@ -104,6 +111,13 @@ class TaskDetailViewSet(mixins.RetrieveModelMixin,
                 return Response(serializer.data)
             logger.info(f"{self.request.user} created task's comment: {serializer.data.get('name')}")
             return Response(serializer.errors)
+    
+    @action(methods=['GET'], detail=True, permission_classes=(TaskInsidePermission,))
+    def mycomments(self, request, pk):
+        task = get_object_or_404(models.Task, id=pk)
+        res = serializers.TaskCommentSerializer(models.TaskComment.objects.filter(task_id=task.id, creator_id=self.request.user.id), many=True)
+
+        return Response(res.data)
 
     @action(methods=['GET', 'POST'], detail=True, permission_classes=(TaskInsidePermission,))
     def docs(self, request, pk):
@@ -122,6 +136,14 @@ class TaskDetailViewSet(mixins.RetrieveModelMixin,
                 return Response(serializer.data)
             logger.info(f"{self.request.user} created task's doc: {serializer.data.get('name')}")
             return Response(serializer.errors)
+    
+    @action(methods=['GET'], detail=True, permission_classes=(TaskInsidePermission,))
+    def mydocs(self, request, pk):
+        task = get_object_or_404(models.Task, id=pk)
+        res = serializers.TaskDocumentSerializer(models.TaskDocument.objects.filter(task_id=task.id, creator_id=self.request.user.id), many=True)
+
+        return Response(res.data)
+
 
 class TaskCommentViewSet(mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,

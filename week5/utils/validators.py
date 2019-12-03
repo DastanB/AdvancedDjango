@@ -5,7 +5,7 @@ from utils.constants import TASK_ALLOWED_EXTS
 
 def task_document_size(value):
 
-    if value.size > 100000:
+    if value.size > 200000:
         raise ValidationError('invalid file size')
 
 
